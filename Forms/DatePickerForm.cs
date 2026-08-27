@@ -48,14 +48,14 @@ namespace SchoolSchedule.Forms
             quickPanel.Height = Ui.Px(100);
             quickPanel.Padding = new Padding(Ui.Px(20), Ui.Px(15), Ui.Px(20), Ui.Px(15));
 
-            foreach (var button in new[] { todayButton, tomorrowButton, nextSchoolDayButton, prevMonthButton, nextMonthButton })
+            // Листание месяцев живёт в самом календаре — стрелки здесь их
+            // только дублировали.
+            foreach (var button in new[] { todayButton, tomorrowButton, nextSchoolDayButton })
                 Ui.TouchButton(button, Ui.Card, Ui.Text, 14f, false);
 
-            todayButton.Width = Ui.Px(170);
-            tomorrowButton.Width = Ui.Px(170);
-            nextSchoolDayButton.Width = Ui.Px(280);
-            prevMonthButton.Width = Ui.Px(90);
-            nextMonthButton.Width = Ui.Px(90);
+            todayButton.Width = Ui.Px(190);
+            tomorrowButton.Width = Ui.Px(190);
+            nextSchoolDayButton.Width = Ui.Px(300);
 
             calendarCard.BackColor = Ui.Card;
 
@@ -161,10 +161,6 @@ namespace SchoolSchedule.Forms
         {
             Select(ScheduleResolver.NextSchoolDay(DateTime.Today.AddDays(1), _marks, _daysCount, 21));
         }
-
-        private void PrevMonthClicked(object sender, EventArgs e) { Select(SelectedDate.AddMonths(-1)); }
-
-        private void NextMonthClicked(object sender, EventArgs e) { Select(SelectedDate.AddMonths(1)); }
 
         private void OkClicked(object sender, EventArgs e)
         {

@@ -25,8 +25,6 @@ namespace SchoolSchedule.Forms
             this.cancelButton = new System.Windows.Forms.Button();
             this.okButton = new System.Windows.Forms.Button();
             this.quickPanel = new System.Windows.Forms.Panel();
-            this.nextMonthButton = new System.Windows.Forms.Button();
-            this.prevMonthButton = new System.Windows.Forms.Button();
             this.nextSchoolDayButton = new System.Windows.Forms.Button();
             this.tomorrowButton = new System.Windows.Forms.Button();
             this.todayButton = new System.Windows.Forms.Button();
@@ -109,8 +107,6 @@ namespace SchoolSchedule.Forms
             // 
             // quickPanel
             // 
-            this.quickPanel.Controls.Add(this.nextMonthButton);
-            this.quickPanel.Controls.Add(this.prevMonthButton);
             this.quickPanel.Controls.Add(this.nextSchoolDayButton);
             this.quickPanel.Controls.Add(this.tomorrowButton);
             this.quickPanel.Controls.Add(this.todayButton);
@@ -121,25 +117,6 @@ namespace SchoolSchedule.Forms
             this.quickPanel.Size = new System.Drawing.Size(880, 100);
             this.quickPanel.TabIndex = 1;
             // 
-            // nextMonthButton
-            // 
-            this.nextMonthButton.Dock = System.Windows.Forms.DockStyle.Right;
-            this.nextMonthButton.Location = new System.Drawing.Point(770, 15);
-            this.nextMonthButton.Name = "nextMonthButton";
-            this.nextMonthButton.Size = new System.Drawing.Size(90, 70);
-            this.nextMonthButton.TabIndex = 4;
-            this.nextMonthButton.Text = "▶";
-            this.nextMonthButton.Click += new System.EventHandler(this.NextMonthClicked);
-            // 
-            // prevMonthButton
-            // 
-            this.prevMonthButton.Dock = System.Windows.Forms.DockStyle.Right;
-            this.prevMonthButton.Location = new System.Drawing.Point(680, 15);
-            this.prevMonthButton.Name = "prevMonthButton";
-            this.prevMonthButton.Size = new System.Drawing.Size(90, 70);
-            this.prevMonthButton.TabIndex = 3;
-            this.prevMonthButton.Text = "◀";
-            this.prevMonthButton.Click += new System.EventHandler(this.PrevMonthClicked);
             // 
             // nextSchoolDayButton
             // 
@@ -222,8 +199,6 @@ namespace SchoolSchedule.Forms
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Button okButton;
         private System.Windows.Forms.Panel quickPanel;
-        private System.Windows.Forms.Button nextMonthButton;
-        private System.Windows.Forms.Button prevMonthButton;
         private System.Windows.Forms.Button nextSchoolDayButton;
         private System.Windows.Forms.Button tomorrowButton;
         private System.Windows.Forms.Button todayButton;
