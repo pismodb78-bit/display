@@ -50,8 +50,13 @@ CREATE TABLE IF NOT EXISTS lesson_times (
 -- Так сделано нарочно: переключение показа — это смена одного числа в
 -- settings, а не подмена таблиц. И запросы для обеих сеток одинаковые.
 --
--- uq_cell не даёт положить два урока в одну клетку, а ON DELETE CASCADE
--- убирает расписание вместе с удалённым классом.
+-- uq_cell не даёт положить два урока в одну клетку.
+--
+-- Внешнего ключа на classes здесь нет намеренно. Для его создания MySQL
+-- требует право REFERENCES, а школьному пользователю базы его выдают далеко
+-- не всегда — на такой учётной записи установка падала бы с ошибкой
+-- «REFERENCES command denied». Уроки удалённого класса программа убирает
+-- сама, одной транзакцией.
 
 CREATE TABLE IF NOT EXISTS schedule (
   id        INT          NOT NULL AUTO_INCREMENT,
@@ -65,7 +70,7 @@ CREATE TABLE IF NOT EXISTS schedule (
   PRIMARY KEY (id),
   UNIQUE KEY uq_cell (variant, class_id, weekday, lesson_no),
   KEY idx_day (variant, weekday, class_id, lesson_no),
-  CONSTRAINT fk_schedule_class FOREIGN KEY (class_id) REFERENCES classes (id) ON DELETE CASCADE
+  KEY idx_class (class_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 

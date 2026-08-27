@@ -169,7 +169,12 @@ namespace SchoolSchedule.Forms
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            ReloadAll();
+
+            // Первое обращение к базе — тоже в фоне: окно должно появиться
+            // сразу, даже если сервер выключен и подключение отвалится по
+            // таймауту. Раньше программа замирала на старте до отказа.
+            ShowProblem("Подключаюсь к базе…", Db.SafeDescription());
+            BeginInvoke((MethodInvoker)delegate { PollTick(this, EventArgs.Empty); });
         }
 
         // ===================== ЗАГРУЗКА =====================
@@ -334,13 +339,34 @@ namespace SchoolSchedule.Forms
         /// </summary>
         private void ShowFailure(string details)
         {
+            ShowFailure(details, null);
+        }
+
+        /// <summary>
+        /// Заголовок подбираем по делу: «нет связи» и «не хватает прав» —
+        /// разные беды, и человеку у экрана важно, какая именно.
+        /// </summary>
+        private void ShowFailure(string details, string title)
+        {
             _offline = true;
-            ShowProblem("Нет связи с базой", details);
+
+            if (title == null)
+                title = Db.IsOnline || (details ?? "").Contains("прав") ? "База не отвечает как надо" : "Нет связи с базой";
+
+            ShowProblem(title, details);
         }
 
         private void ShowProblem(string title, string details)
         {
-            messageLabel.Text = title + Environment.NewLine + Environment.NewLine + details;
+            var text = title + Environment.NewLine + Environment.NewLine + details;
+
+            // Сообщения бывают и в одну строку («Праздник»), и на три строки
+            // с ответом сервера. Крупный шрифт для длинного текста означал бы
+            // обрезанные по краям слова, поэтому размер выбираем по длине.
+            var length = (details ?? "").Length;
+            messageLabel.Font = Ui.F(length > 160 ? 15f : length > 80 ? 20f : 28f, true);
+
+            messageLabel.Text = text;
             messageLabel.Bounds = ContentRect();
             messageLabel.Visible = true;
             messageLabel.BringToFront();
@@ -919,6 +945,16 @@ namespace SchoolSchedule.Forms
         /// <summary>Перерисовать. reloadData — сходить в базу за сеткой заново.</summary>
         private void Redraw(bool reloadData)
         {
+            // Пока база молчит, в неё не ходим: каждое нажатие стрелки иначе
+            // упирается в таймаут подключения, и экран замирает на секунды.
+            // Опрос в фоне сам заметит, когда связь вернётся.
+            if (_offline)
+            {
+                UpdateHeader();
+                UpdateNav();
+                return;
+            }
+
             try
             {
                 if (reloadData) LoadDay();
@@ -1031,12 +1067,16 @@ namespace SchoolSchedule.Forms
 
             // Если базы нет, редактор открывать бессмысленно — человеку нужен
             // не он, а окно подключения. Ведём сразу туда.
-            if (!Db.IsOnline)
+            if (_offline || !Db.IsOnline)
             {
                 using (var connection = new ConnectionForm()) connection.ShowDialog(this);
+
                 _schemaOk = false;
                 ReloadAll();
-                return;
+
+                // Связь наладилась — открываем то, ради чего и нажимали
+                // «Учитель», а не оставляем человека перед пустым экраном.
+                if (_offline) return;
             }
 
             bool exit;

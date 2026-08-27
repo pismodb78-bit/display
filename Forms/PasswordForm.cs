@@ -73,7 +73,8 @@ namespace SchoolSchedule.Forms
             cancelButton.Width = Ui.Px(170);
             okButton.Width = Ui.Px(200);
 
-            ClientSize = new Size(Ui.Px(620), Ui.Px(720));
+            ClientSize = Ui.Dialog(0.42, 0.82);
+            keyboard.Height = (int)(ClientSize.Height * 0.45);
         }
 
         /// <summary>Цифровая клавиатура — пароль на стене обычно всё-таки цифровой.</summary>

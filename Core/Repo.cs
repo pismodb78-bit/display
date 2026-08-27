@@ -57,10 +57,21 @@ namespace SchoolSchedule.Core
             Touch();
         }
 
-        /// <summary>Удаление класса уносит и его уроки — за это отвечает внешний ключ.</summary>
+        /// <summary>
+        /// Удалить класс вместе с его расписанием — обе сетки сразу.
+        ///
+        /// Внешнего ключа с ON DELETE CASCADE в таблице нет намеренно (он
+        /// требует права REFERENCES, которого у школьного пользователя базы
+        /// может не быть), поэтому уроки убираем сами. Одной транзакцией:
+        /// класс без расписания и расписание без класса одинаково нехороши.
+        /// </summary>
         public static void DeleteClass(int id)
         {
-            Db.Exec("DELETE FROM classes WHERE id = @p0", id);
+            Db.Batch(new List<Db.Statement>
+            {
+                Db.S("DELETE FROM schedule WHERE class_id = @p0", id),
+                Db.S("DELETE FROM classes WHERE id = @p0", id)
+            });
             Touch();
         }
 

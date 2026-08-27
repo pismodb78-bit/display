@@ -95,7 +95,7 @@ namespace SchoolSchedule.Forms
             cancelButton.Width = Ui.Px(180);
             saveButton.Width = Ui.Px(280);
 
-            ClientSize = new Size(Ui.Px(900), Ui.Px(760));
+            ClientSize = Ui.Dialog(0.8, 0.9);
         }
 
         /// <summary>

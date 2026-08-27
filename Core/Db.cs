@@ -61,7 +61,7 @@ namespace SchoolSchedule.Core
             builder.Password = AppConfig.Password;
             builder.Database = AppConfig.Database;
             builder.CharacterSet = "utf8mb4";
-            builder.ConnectionTimeout = 6;          // экран не должен «висеть», если сервер выключен
+            builder.ConnectionTimeout = 3;          // экран не должен «висеть», если сервер выключен
             builder.DefaultCommandTimeout = 20;
             builder.AllowPublicKeyRetrieval = true; // MySQL 8 с caching_sha2_password
             builder.Pooling = true;
@@ -135,6 +135,12 @@ namespace SchoolSchedule.Core
                              + "Создайте её в phpMyAdmin и загрузите sql/school_schedule.sql.";
                     case 1044:
                         return "Пользователю " + user + " закрыт доступ к базе «" + database + "».";
+                    case 1142:
+                    case 1143:
+                        return "Пользователю " + user + " не хватает прав в базе «" + database + "». "
+                             + "В phpMyAdmin выдайте ему права SELECT, INSERT, UPDATE, DELETE, CREATE и INDEX "
+                             + "на эту базу — либо загрузите sql/school_schedule.sql от имени администратора. "
+                             + "Ответ сервера: " + mysql.Message;
                     case 1062:
                         return "Такая запись уже есть — например, класс с этим названием.";
                     case 1406:
@@ -308,20 +314,35 @@ namespace SchoolSchedule.Core
                 builder.Password = password;
                 builder.Database = database;
                 builder.CharacterSet = "utf8mb4";
-                builder.ConnectionTimeout = 6;
+                builder.ConnectionTimeout = 4;
                 builder.AllowPublicKeyRetrieval = true;
                 builder.Pooling = false;   // разовая проверка, пул тут ни к чему
 
                 using (var connection = new MySqlConnection(builder.ConnectionString))
                 {
                     connection.Open();
+
+                    string version;
                     using (var command = new MySqlCommand("SELECT VERSION()", connection))
+                        version = Convert.ToString(command.ExecuteScalar());
+
+                    // Одного «сервер ответил» мало: база может быть на месте, а
+                    // таблиц в ней не быть — и программа всё равно не заработает.
+                    // Раз уж проверяем, проверяем то, что человека волнует.
+                    var missing = MissingTables(connection);
+                    var where = " (" + user + "@" + server + ":" + port + "/" + database + ")";
+
+                    if (missing.Count == 0)
                     {
-                        var version = Convert.ToString(command.ExecuteScalar());
-                        message = "Подключение есть. MySQL " + version +
-                                  " (" + user + "@" + server + ":" + port + "/" + database + ")";
+                        message = "Подключение есть, таблицы на месте. MySQL " + version + where;
                         return true;
                     }
+
+                    message = "Сервер отвечает (MySQL " + version + where + "), но в базе не хватает таблиц: "
+                            + string.Join(", ", missing.ToArray()) + ". "
+                            + "Нажмите «Сохранить» — программа попробует их создать. "
+                            + "Если прав не хватит, загрузите sql/school_schedule.sql в phpMyAdmin.";
+                    return false;
                 }
             }
             catch (Exception ex)
@@ -329,6 +350,25 @@ namespace SchoolSchedule.Core
                 message = Explain(ex, server, port, user, database);
                 return false;
             }
+        }
+
+        /// <summary>Какие из нужных таблиц не найдены. SHOW TABLES — работает везде,
+        /// в отличие от information_schema, доступ к которому на хостингах закрывают.</summary>
+        private static List<string> MissingTables(MySqlConnection connection)
+        {
+            var present = new List<string>();
+            using (var command = new MySqlCommand("SHOW TABLES", connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read()) present.Add(Convert.ToString(reader.GetValue(0)).ToLowerInvariant());
+            }
+
+            var missing = new List<string>();
+            foreach (var table in Schema.Tables)
+            {
+                if (!present.Contains(table)) missing.Add(table);
+            }
+            return missing;
         }
 
         /// <summary>Проверка текущего подключения: версия сервера или текст ошибки.</summary>

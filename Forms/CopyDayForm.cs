@@ -74,7 +74,7 @@ namespace SchoolSchedule.Forms
             cancelButton.Width = Ui.Px(180);
             okButton.Width = Ui.Px(280);
 
-            ClientSize = new Size(Ui.Px(760), Ui.Px(390));
+            ClientSize = Ui.Dialog(0.55, 0.45);
         }
 
         private void OkClicked(object sender, EventArgs e)

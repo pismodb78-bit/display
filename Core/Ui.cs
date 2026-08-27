@@ -196,6 +196,31 @@ namespace SchoolSchedule.Core
             }
         }
 
+        /// <summary>
+        /// Размер окна долей экрана. Фиксированные пиксели на телевизоре
+        /// превращали диалог в спичечный коробок посреди полотна: кнопки и
+        /// клавиши получались мельче пальца.
+        /// </summary>
+        public static Size Dialog(double widthShare, double heightShare)
+        {
+            var area = new Rectangle(0, 0, 1280, 800);
+            try
+            {
+                var screen = Screen.PrimaryScreen;
+                if (screen != null && screen.WorkingArea.Width > 0) area = screen.WorkingArea;
+            }
+            catch { }
+
+            return new Size((int)(area.Width * Clamp(widthShare)), (int)(area.Height * Clamp(heightShare)));
+        }
+
+        private static double Clamp(double share)
+        {
+            if (share < 0.2) return 0.2;
+            if (share > 1.0) return 1.0;
+            return share;
+        }
+
         public static int Px(int value)
         {
             if (Scale <= 0) Init();

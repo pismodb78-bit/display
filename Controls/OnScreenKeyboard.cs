@@ -111,6 +111,35 @@ namespace SchoolSchedule.Controls
             layoutPanel.Controls.Add(BuildServiceRow(), 0, rows.Length);
 
             layoutPanel.ResumeLayout(true);
+            ScaleKeyFonts();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            ScaleKeyFonts();
+        }
+
+        /// <summary>
+        /// Размер надписи берём от высоты клавиши. Фиксированный кегль на
+        /// большом экране выглядел бы бисером на кнопке размером с ладонь.
+        /// </summary>
+        private void ScaleKeyFonts()
+        {
+            foreach (Control child in layoutPanel.Controls)
+            {
+                var row = child as TableLayoutPanel;
+                if (row == null) continue;
+
+                foreach (Control key in row.Controls)
+                {
+                    var button = key as Button;
+                    if (button == null || button.Height < 8) continue;
+
+                    var short_ = (button.Text ?? "").Length <= 2;
+                    button.Font = Ui.Fp(button.Height * (short_ ? 0.46f : 0.28f), short_);
+                }
+            }
         }
 
         private string[] Rows()

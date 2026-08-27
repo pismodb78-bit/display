@@ -45,7 +45,7 @@ namespace SchoolSchedule.Forms
             allClassesButton.Width = Ui.Px(420);
             cancelButton.Width = Ui.Px(180);
 
-            ClientSize = new Size(Ui.Px(900), Ui.Px(620));
+            ClientSize = Ui.Dialog(0.8, 0.8);
         }
 
         private void Fill(IEnumerable<SchoolClass> classes, int currentClassId)

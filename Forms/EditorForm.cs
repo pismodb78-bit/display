@@ -144,7 +144,7 @@ namespace SchoolSchedule.Forms
             classesHintLabel.Font = Ui.F(12f);
             classesHintLabel.ForeColor = Ui.Muted;
             classesHintLabel.Height = Ui.Px(104);
-            editorKeyboard.Height = Ui.Px(260);
+            editorKeyboard.Height = (int)(ClientSize.Height * 0.42);
 
             // --- звонки ---
             Ui.StyleGrid(bellsGrid, false);
@@ -163,10 +163,8 @@ namespace SchoolSchedule.Forms
             bellsHintLabel.Height = Ui.Px(160);
 
             // --- календарь ---
-            calendarCard.Width = Ui.Px(560);
-            calendar.Font = Ui.F(14f);
-            calendar.TitleBackColor = Ui.AccentDark;
-            calendar.TitleForeColor = Color.White;
+            calendarCard.Width = Ui.Px(620);
+            calendarCard.BackColor = Ui.Card;
 
             calendarSidePanel.Padding = new Padding(Ui.Px(20), Ui.Px(16), Ui.Px(20), Ui.Px(16));
             dayHeaderLabel.Font = Ui.F(20f, true);
@@ -1162,13 +1160,13 @@ namespace SchoolSchedule.Forms
 
         private void FillCalendarTab()
         {
-            LoadDayMark(calendar.SelectionStart.Date);
+            LoadDayMark(calendar.SelectedDate);
             FillUpcoming();
         }
 
-        private void CalendarDateChanged(object sender, DateRangeEventArgs e)
+        private void CalendarDateChanged(object sender, EventArgs e)
         {
-            LoadDayMark(calendar.SelectionStart.Date);
+            LoadDayMark(calendar.SelectedDate);
         }
 
         private void LoadDayMark(DateTime date)
@@ -1190,13 +1188,9 @@ namespace SchoolSchedule.Forms
                 dayTitleBox.Text = mark != null ? (mark.Title ?? "") : "";
                 dayVariantCombo.SelectedIndex = mark != null && mark.Variant.HasValue ? mark.Variant.Value + 1 : 0;
 
-                var bolded = new List<DateTime>();
-                var from = new DateTime(date.Year, date.Month, 1).AddMonths(-1);
-                foreach (var pair in Repo.DaysBetween(from, from.AddMonths(3)))
-                {
-                    if (pair.Value.IsHoliday || pair.Value.Variant.HasValue) bolded.Add(pair.Key);
-                }
-                calendar.BoldedDates = bolded.ToArray();
+                var from = calendar.VisibleMonth.AddMonths(-1);
+                calendar.Marks = Repo.DaysBetween(from, from.AddMonths(3));
+                calendar.Invalidate();
             }
             catch (Exception ex)
             {
@@ -1241,14 +1235,13 @@ namespace SchoolSchedule.Forms
             var item = upcomingList.SelectedItem as UpcomingItem;
             if (item == null) return;
 
-            calendar.SelectionStart = item.Date;
-            calendar.SelectionEnd = item.Date;
+            calendar.SelectedDate = item.Date;
             LoadDayMark(item.Date);
         }
 
         private void DaySaveClicked(object sender, EventArgs e)
         {
-            var date = calendar.SelectionStart.Date;
+            var date = calendar.SelectedDate;
 
             try
             {
@@ -1273,7 +1266,7 @@ namespace SchoolSchedule.Forms
 
         private void DayDeleteClicked(object sender, EventArgs e)
         {
-            var date = calendar.SelectionStart.Date;
+            var date = calendar.SelectedDate;
 
             try
             {

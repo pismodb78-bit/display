@@ -12,14 +12,41 @@ namespace SchoolSchedule.Core
     /// </summary>
     public static class Schema
     {
+        /// <summary>Таблицы, без которых программа работать не может.</summary>
+        public static readonly string[] Tables =
+        {
+            "classes", "lesson_times", "schedule", "calendar_days", "settings"
+        };
+
         public static bool Ensure(out string error)
         {
             error = null;
             try
             {
-                TryCreateDatabase();
                 Db.Batch(Statements());
                 return true;
+            }
+            catch (MySqlException ex) when (ex.Number == 1049)
+            {
+                // Базы ещё нет — создаём и повторяем. Раньше попытка создания
+                // шла всегда, и на выключенном сервере программа ждала два
+                // таймаута подряд вместо одного: экран заметно подвисал.
+                if (!TryCreateDatabase())
+                {
+                    error = Db.Explain(ex);
+                    return false;
+                }
+
+                try
+                {
+                    Db.Batch(Statements());
+                    return true;
+                }
+                catch (Exception retry)
+                {
+                    error = Db.Explain(retry);
+                    return false;
+                }
             }
             catch (Exception ex)
             {
@@ -32,14 +59,14 @@ namespace SchoolSchedule.Core
         /// Создать саму базу, если её ещё нет. Прав может не хватить — это не
         /// беда: следующий шаг всё равно скажет человеку, что делать.
         /// </summary>
-        private static void TryCreateDatabase()
+        private static bool TryCreateDatabase()
         {
             var builder = new MySqlConnectionStringBuilder(Db.ConnectionString);
             var name = builder.Database;
 
             // Имя базы приходит из текстового файла, поэтому в обратные кавычки
             // его не подставляем без проверки: разрешаем только буквы, цифры и «_».
-            if (string.IsNullOrWhiteSpace(name) || !IsSimpleName(name)) return;
+            if (string.IsNullOrWhiteSpace(name) || !IsSimpleName(name)) return false;
 
             builder.Database = "";
             try
@@ -52,8 +79,13 @@ namespace SchoolSchedule.Core
                     using (var command = new MySqlCommand(sql, connection))
                         command.ExecuteNonQuery();
                 }
+                return true;
             }
-            catch { /* нет прав — работаем с уже созданной базой */ }
+            catch
+            {
+                // Нет прав на CREATE DATABASE — базу заведут в phpMyAdmin.
+                return false;
+            }
         }
 
         private static bool IsSimpleName(string name)
@@ -87,6 +119,13 @@ CREATE TABLE IF NOT EXISTS lesson_times (
             // variant: 0 — обычное расписание, 1 — изменённое.
             // Обе сетки живут в одной таблице: запросы одинаковые, а переключение
             // показа — это смена одного числа, а не подмена таблицы.
+            //
+            // Внешнего ключа на classes здесь нарочно нет. Для его создания MySQL
+            // требует право REFERENCES, а школьному пользователю базы его выдают
+            // далеко не всегда: на такой учётной записи вся установка падала бы
+            // с «REFERENCES command denied» и программа не заводилась вовсе.
+            // Уроки удалённого класса убирает Repo.DeleteClass — одной
+            // транзакцией, то есть ровно то же, что делал бы ON DELETE CASCADE.
             yield return Db.S(@"
 CREATE TABLE IF NOT EXISTS schedule (
   id        INT          NOT NULL AUTO_INCREMENT,
@@ -100,7 +139,7 @@ CREATE TABLE IF NOT EXISTS schedule (
   PRIMARY KEY (id),
   UNIQUE KEY uq_cell (variant, class_id, weekday, lesson_no),
   KEY idx_day (variant, weekday, class_id, lesson_no),
-  CONSTRAINT fk_schedule_class FOREIGN KEY (class_id) REFERENCES classes (id) ON DELETE CASCADE
+  KEY idx_class (class_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
             // Отметки на календаре: праздники, каникулы и дни, которым назначена

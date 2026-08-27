@@ -28,8 +28,7 @@ namespace SchoolSchedule.Forms
             ApplyTheme();
 
             SelectedDate = current.Date;
-            calendar.SelectionStart = SelectedDate;
-            calendar.SelectionEnd = SelectedDate;
+            calendar.SelectedDate = SelectedDate;
 
             LoadMarks();
             ShowInfo();
@@ -58,14 +57,7 @@ namespace SchoolSchedule.Forms
             prevMonthButton.Width = Ui.Px(90);
             nextMonthButton.Width = Ui.Px(90);
 
-            // Календарь оставлен светлым нарочно: системный элемент не всегда
-            // слушается перекраски, и «наполовину тёмный» выглядел бы поломкой.
-            // Белый лист на тёмном фоне читается как лист бумаги.
-            calendarCard.BackColor = Color.White;
-            calendar.Font = Ui.F(16f);
-            calendar.TitleBackColor = Ui.AccentDark;
-            calendar.TitleForeColor = Color.White;
-            calendar.TrailingForeColor = Color.Silver;
+            calendarCard.BackColor = Ui.Card;
 
             infoPanel.BackColor = Ui.Bg;
             infoPanel.Height = Ui.Px(70);
@@ -81,63 +73,48 @@ namespace SchoolSchedule.Forms
             cancelButton.Width = Ui.Px(180);
             okButton.Width = Ui.Px(300);
 
-            ClientSize = new Size(Ui.Px(880), Ui.Px(800));
+            ClientSize = Ui.Dialog(0.62, 0.92);
         }
 
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
-            CenterCalendar();
-        }
-
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
-            CenterCalendar();
-        }
-
-        private void CenterCalendar()
-        {
-            calendar.Left = Math.Max(0, (calendarCard.ClientSize.Width - calendar.Width) / 2);
-            calendar.Top = Math.Max(0, (calendarCard.ClientSize.Height - calendar.Height) / 2);
-        }
-
-        /// <summary>Пометки на видимый месяц и соседние — жирным на календаре.</summary>
+        /// <summary>Пометки на видимый месяц и соседние.</summary>
         private void LoadMarks()
         {
             try
             {
-                var from = new DateTime(calendar.SelectionStart.Year, calendar.SelectionStart.Month, 1).AddMonths(-1);
+                var from = calendar.VisibleMonth.AddMonths(-1);
                 var to = from.AddMonths(3);
+
                 _marks = Repo.DaysBetween(from, to);
                 _marksFrom = from;
                 _marksTo = to;
 
-                var bolded = new List<DateTime>();
-                foreach (var pair in _marks)
-                {
-                    if (pair.Value.IsHoliday || pair.Value.Variant.HasValue) bolded.Add(pair.Key);
-                }
-                calendar.BoldedDates = bolded.ToArray();
+                calendar.Marks = _marks;
+                calendar.Invalidate();
             }
             catch
             {
                 // Календарь без пометок всё ещё работает — дату выбрать можно.
-                calendar.BoldedDates = new DateTime[0];
+                _marks = new Dictionary<DateTime, CalendarDay>();
+                calendar.Marks = _marks;
                 _marksFrom = DateTime.MaxValue;
                 _marksTo = DateTime.MinValue;
             }
         }
 
-        private void CalendarDateChanged(object sender, DateRangeEventArgs e)
+        private void CalendarDateChanged(object sender, EventArgs e)
         {
-            SelectedDate = calendar.SelectionStart.Date;
+            SelectedDate = calendar.SelectedDate;
 
-            // Стрелками самого календаря можно уехать далеко от загруженного
-            // куска — тогда праздники там выглядели бы обычными днями.
+            // Листать можно далеко за пределы загруженного куска — тогда
+            // праздники там выглядели бы обычными днями.
             if (SelectedDate < _marksFrom || SelectedDate > _marksTo) LoadMarks();
 
             ShowInfo();
+        }
+
+        private void CalendarMonthChanged(object sender, EventArgs e)
+        {
+            LoadMarks();
         }
 
         private void ShowInfo()
@@ -171,8 +148,7 @@ namespace SchoolSchedule.Forms
         private void Select(DateTime date)
         {
             SelectedDate = date.Date;
-            calendar.SelectionStart = SelectedDate;
-            calendar.SelectionEnd = SelectedDate;
+            calendar.SelectedDate = SelectedDate;
             LoadMarks();
             ShowInfo();
         }

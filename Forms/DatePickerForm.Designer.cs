@@ -18,7 +18,7 @@ namespace SchoolSchedule.Forms
         private void InitializeComponent()
         {
             this.calendarCard = new System.Windows.Forms.Panel();
-            this.calendar = new System.Windows.Forms.MonthCalendar();
+            this.calendar = new SchoolSchedule.Controls.TouchCalendar();
             this.infoPanel = new System.Windows.Forms.Panel();
             this.infoLabel = new System.Windows.Forms.Label();
             this.footerPanel = new System.Windows.Forms.Panel();
@@ -41,7 +41,6 @@ namespace SchoolSchedule.Forms
             // 
             // calendarCard
             // 
-            this.calendarCard.BackColor = System.Drawing.Color.White;
             this.calendarCard.Controls.Add(this.calendar);
             this.calendarCard.Dock = System.Windows.Forms.DockStyle.Fill;
             this.calendarCard.Location = new System.Drawing.Point(0, 190);
@@ -51,12 +50,13 @@ namespace SchoolSchedule.Forms
             // 
             // calendar
             // 
-            this.calendar.Location = new System.Drawing.Point(30, 20);
-            this.calendar.MaxSelectionCount = 1;
+            this.calendar.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.calendar.Location = new System.Drawing.Point(0, 0);
             this.calendar.Name = "calendar";
+            this.calendar.Size = new System.Drawing.Size(880, 430);
             this.calendar.TabIndex = 0;
-            this.calendar.DateChanged += new System.Windows.Forms.DateRangeEventHandler(this.CalendarDateChanged);
-            this.calendar.DateSelected += new System.Windows.Forms.DateRangeEventHandler(this.CalendarDateChanged);
+            this.calendar.DateChanged += new System.EventHandler(this.CalendarDateChanged);
+            this.calendar.MonthChanged += new System.EventHandler(this.CalendarMonthChanged);
             // 
             // infoPanel
             // 
@@ -215,7 +215,7 @@ namespace SchoolSchedule.Forms
         #endregion
 
         private System.Windows.Forms.Panel calendarCard;
-        private System.Windows.Forms.MonthCalendar calendar;
+        private SchoolSchedule.Controls.TouchCalendar calendar;
         private System.Windows.Forms.Panel infoPanel;
         private System.Windows.Forms.Label infoLabel;
         private System.Windows.Forms.Panel footerPanel;
