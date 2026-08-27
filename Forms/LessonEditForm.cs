@@ -22,18 +22,22 @@ namespace SchoolSchedule.Forms
         /// <summary>Нажали «Убрать урок» — клетку надо очистить.</summary>
         public bool Cleared { get; private set; }
 
+        private readonly List<string> _subjects;
+        private readonly List<string> _teachers;
+        private readonly List<string> _rooms;
+
         public LessonEditForm(string title, string subtitle, Lesson lesson,
                               List<string> subjects, List<string> teachers, List<string> rooms)
         {
+            _subjects = subjects ?? new List<string>();
+            _teachers = teachers ?? new List<string>();
+            _rooms = rooms ?? new List<string>();
+
             InitializeComponent();
             ApplyTheme();
 
             titleLabel.Text = title;
             subtitleLabel.Text = subtitle;
-
-            FillSuggestions(subjectBox, subjects);
-            FillSuggestions(teacherBox, teachers);
-            FillSuggestions(roomBox, rooms);
 
             if (lesson != null)
             {
@@ -66,6 +70,7 @@ namespace SchoolSchedule.Forms
             fieldsPanel.Height = Ui.Px(270);
             fieldsPanel.Padding = new Padding(Ui.Px(30), Ui.Px(20), Ui.Px(30), Ui.Px(10));
             fieldsPanel.ColumnStyles[0].Width = Ui.Px(220);
+            fieldsPanel.ColumnStyles[2].Width = Ui.Px(220);
 
             for (int i = 0; i < fieldsPanel.RowStyles.Count; i++)
                 fieldsPanel.RowStyles[i].Height = Ui.Px(80);
@@ -84,6 +89,12 @@ namespace SchoolSchedule.Forms
                 box.Margin = new Padding(Ui.Px(6), Ui.Px(12), Ui.Px(6), Ui.Px(12));
             }
 
+            foreach (var button in new[] { subjectPickButton, teacherPickButton, roomPickButton })
+            {
+                Ui.TouchButton(button, Ui.Card, Ui.Text, 13f, false);
+                button.Margin = new Padding(Ui.Px(6), Ui.Px(10), Ui.Px(6), Ui.Px(10));
+            }
+
             footerPanel.BackColor = Ui.Header;
             footerPanel.Height = Ui.Px(110);
             footerPanel.Padding = new Padding(Ui.Px(20), Ui.Px(12), Ui.Px(20), Ui.Px(18));
@@ -99,23 +110,26 @@ namespace SchoolSchedule.Forms
         }
 
         /// <summary>
-        /// Подсказки из того, что уже вводили: «Математика» набирается один раз
-        /// за год, дальше выбирается из списка.
+        /// Выбор из уже введённого: «Математика» набирается один раз за год,
+        /// дальше берётся кнопкой «Список…».
         /// </summary>
-        private static void FillSuggestions(ComboBox box, List<string> values)
+        private void Pick(TextBox box, string title, List<string> values)
         {
-            box.DropDownStyle = ComboBoxStyle.DropDown;
-            box.AutoCompleteMode = AutoCompleteMode.Suggest;
-            box.AutoCompleteSource = AutoCompleteSource.ListItems;
-            box.DropDownHeight = Ui.Px(320);
-            box.IntegralHeight = false;
+            var chosen = ValuePickerForm.Ask(this, title, values);
+            if (chosen == null) return;
 
-            if (values == null) return;
-            foreach (var value in values)
-            {
-                if (!string.IsNullOrWhiteSpace(value)) box.Items.Add(value);
-            }
+            box.Text = chosen;
+            box.SelectionStart = box.Text.Length;
+            box.SelectionLength = 0;
+            keyboard.Target = box;
+            box.Focus();
         }
+
+        private void SubjectPickClicked(object sender, EventArgs e) { Pick(subjectBox, "Предмет", _subjects); }
+
+        private void TeacherPickClicked(object sender, EventArgs e) { Pick(teacherBox, "Учитель", _teachers); }
+
+        private void RoomPickClicked(object sender, EventArgs e) { Pick(roomBox, "Кабинет", _rooms); }
 
         private void FieldEntered(object sender, EventArgs e)
         {

@@ -19,11 +19,14 @@ namespace SchoolSchedule.Forms
         {
             this.fieldsPanel = new System.Windows.Forms.TableLayoutPanel();
             this.subjectLabel = new System.Windows.Forms.Label();
-            this.subjectBox = new System.Windows.Forms.ComboBox();
+            this.subjectBox = new System.Windows.Forms.TextBox();
+            this.subjectPickButton = new System.Windows.Forms.Button();
             this.teacherLabel = new System.Windows.Forms.Label();
-            this.teacherBox = new System.Windows.Forms.ComboBox();
+            this.teacherBox = new System.Windows.Forms.TextBox();
+            this.teacherPickButton = new System.Windows.Forms.Button();
             this.roomLabel = new System.Windows.Forms.Label();
-            this.roomBox = new System.Windows.Forms.ComboBox();
+            this.roomBox = new System.Windows.Forms.TextBox();
+            this.roomPickButton = new System.Windows.Forms.Button();
             this.keyboard = new SchoolSchedule.Controls.OnScreenKeyboard();
             this.footerPanel = new System.Windows.Forms.Panel();
             this.saveButton = new System.Windows.Forms.Button();
@@ -39,15 +42,19 @@ namespace SchoolSchedule.Forms
             // 
             // fieldsPanel
             // 
-            this.fieldsPanel.ColumnCount = 2;
+            this.fieldsPanel.ColumnCount = 3;
             this.fieldsPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 220F));
             this.fieldsPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.fieldsPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 220F));
             this.fieldsPanel.Controls.Add(this.subjectLabel, 0, 0);
             this.fieldsPanel.Controls.Add(this.subjectBox, 1, 0);
+            this.fieldsPanel.Controls.Add(this.subjectPickButton, 2, 0);
             this.fieldsPanel.Controls.Add(this.teacherLabel, 0, 1);
             this.fieldsPanel.Controls.Add(this.teacherBox, 1, 1);
+            this.fieldsPanel.Controls.Add(this.teacherPickButton, 2, 1);
             this.fieldsPanel.Controls.Add(this.roomLabel, 0, 2);
             this.fieldsPanel.Controls.Add(this.roomBox, 1, 2);
+            this.fieldsPanel.Controls.Add(this.roomPickButton, 2, 2);
             this.fieldsPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.fieldsPanel.Location = new System.Drawing.Point(0, 110);
             this.fieldsPanel.Name = "fieldsPanel";
@@ -71,12 +78,21 @@ namespace SchoolSchedule.Forms
             // 
             // subjectBox
             // 
+            this.subjectBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.subjectBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.subjectBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.subjectBox.Location = new System.Drawing.Point(253, 23);
             this.subjectBox.Name = "subjectBox";
             this.subjectBox.Size = new System.Drawing.Size(614, 40);
             this.subjectBox.TabIndex = 1;
+            // 
+            // subjectPickButton
+            // 
+            this.subjectPickButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.subjectPickButton.Name = "subjectPickButton";
+            this.subjectPickButton.Size = new System.Drawing.Size(214, 74);
+            this.subjectPickButton.TabIndex = 2;
+            this.subjectPickButton.Text = "Список…";
+            this.subjectPickButton.Click += new System.EventHandler(this.SubjectPickClicked);
             // 
             // teacherLabel
             // 
@@ -90,12 +106,21 @@ namespace SchoolSchedule.Forms
             // 
             // teacherBox
             // 
+            this.teacherBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.teacherBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.teacherBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.teacherBox.Location = new System.Drawing.Point(253, 103);
             this.teacherBox.Name = "teacherBox";
             this.teacherBox.Size = new System.Drawing.Size(614, 40);
             this.teacherBox.TabIndex = 3;
+            // 
+            // teacherPickButton
+            // 
+            this.teacherPickButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.teacherPickButton.Name = "teacherPickButton";
+            this.teacherPickButton.Size = new System.Drawing.Size(214, 74);
+            this.teacherPickButton.TabIndex = 4;
+            this.teacherPickButton.Text = "Список…";
+            this.teacherPickButton.Click += new System.EventHandler(this.TeacherPickClicked);
             // 
             // roomLabel
             // 
@@ -109,12 +134,21 @@ namespace SchoolSchedule.Forms
             // 
             // roomBox
             // 
+            this.roomBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.roomBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.roomBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.roomBox.Location = new System.Drawing.Point(253, 183);
             this.roomBox.Name = "roomBox";
             this.roomBox.Size = new System.Drawing.Size(614, 40);
             this.roomBox.TabIndex = 5;
+            // 
+            // roomPickButton
+            // 
+            this.roomPickButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.roomPickButton.Name = "roomPickButton";
+            this.roomPickButton.Size = new System.Drawing.Size(214, 74);
+            this.roomPickButton.TabIndex = 6;
+            this.roomPickButton.Text = "Список…";
+            this.roomPickButton.Click += new System.EventHandler(this.RoomPickClicked);
             // 
             // keyboard
             // 
@@ -219,11 +253,14 @@ namespace SchoolSchedule.Forms
 
         private System.Windows.Forms.TableLayoutPanel fieldsPanel;
         private System.Windows.Forms.Label subjectLabel;
-        private System.Windows.Forms.ComboBox subjectBox;
+        private System.Windows.Forms.TextBox subjectBox;
+        private System.Windows.Forms.Button subjectPickButton;
         private System.Windows.Forms.Label teacherLabel;
-        private System.Windows.Forms.ComboBox teacherBox;
+        private System.Windows.Forms.TextBox teacherBox;
+        private System.Windows.Forms.Button teacherPickButton;
         private System.Windows.Forms.Label roomLabel;
-        private System.Windows.Forms.ComboBox roomBox;
+        private System.Windows.Forms.TextBox roomBox;
+        private System.Windows.Forms.Button roomPickButton;
         private SchoolSchedule.Controls.OnScreenKeyboard keyboard;
         private System.Windows.Forms.Panel footerPanel;
         private System.Windows.Forms.Button saveButton;

@@ -336,11 +336,10 @@ namespace SchoolSchedule.Controls
             var box = Box();
             if (box != null)
             {
-                var start = box.SelectionStart;
-                var length = box.SelectionLength;
-                box.Text = box.Text.Remove(start, length).Insert(start, text);
-                box.SelectionStart = start + text.Length;
-                box.SelectionLength = 0;
+                // SelectedText сам заменяет выделенное и ставит курсор после
+                // вставки — ручная арифметика с позициями тут только плодит
+                // ошибки вроде «в поле остаётся одна буква».
+                box.SelectedText = text;
                 box.Focus();
                 return;
             }
@@ -385,19 +384,18 @@ namespace SchoolSchedule.Controls
             var box = Box();
             if (box != null)
             {
-                var start = box.SelectionStart;
-                var length = box.SelectionLength;
+                if (box.SelectionLength > 0)
+                {
+                    box.SelectedText = "";
+                }
+                else if (box.SelectionStart > 0)
+                {
+                    var caret = box.SelectionStart;
+                    box.Text = box.Text.Remove(caret - 1, 1);
+                    box.SelectionStart = caret - 1;
+                    box.SelectionLength = 0;
+                }
 
-                if (length > 0)
-                {
-                    box.Text = box.Text.Remove(start, length);
-                    box.SelectionStart = start;
-                }
-                else if (start > 0)
-                {
-                    box.Text = box.Text.Remove(start - 1, 1);
-                    box.SelectionStart = start - 1;
-                }
                 box.Focus();
                 return;
             }
