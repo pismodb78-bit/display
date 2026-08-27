@@ -124,8 +124,10 @@ namespace SchoolSchedule.Core
         }
 
         /// <summary>
-        /// Excel в русской Windows сохраняет CSV в кодировке 1251 и без BOM,
-        /// а всё остальное — в UTF-8. Определяем по факту, а не по вере.
+        /// Кодировку определяем по факту, а не по вере: Excel в русской Windows
+        /// сохраняет «CSV» в 1251 без всяких пометок, «CSV UTF-8» — с BOM,
+        /// а «Юникод (текст)» — вообще в UTF-16 с табуляциями. Человеку у
+        /// компьютера незачем помнить, какой пункт он выбрал в меню.
         /// </summary>
         public static string ReadText(string path)
         {
@@ -133,6 +135,12 @@ namespace SchoolSchedule.Core
 
             if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
                 return new UTF8Encoding(false).GetString(bytes, 3, bytes.Length - 3);
+
+            if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
+                return Encoding.Unicode.GetString(bytes, 2, bytes.Length - 2);
+
+            if (bytes.Length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF)
+                return Encoding.BigEndianUnicode.GetString(bytes, 2, bytes.Length - 2);
 
             try
             {
