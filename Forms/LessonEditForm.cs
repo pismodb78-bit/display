@@ -105,7 +105,7 @@ namespace SchoolSchedule.Forms
         private static void FillSuggestions(ComboBox box, List<string> values)
         {
             box.DropDownStyle = ComboBoxStyle.DropDown;
-            box.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            box.AutoCompleteMode = AutoCompleteMode.Suggest;
             box.AutoCompleteSource = AutoCompleteSource.ListItems;
             box.DropDownHeight = Ui.Px(320);
             box.IntegralHeight = false;

@@ -340,20 +340,44 @@ namespace SchoolSchedule.Controls
                 var length = box.SelectionLength;
                 box.Text = box.Text.Remove(start, length).Insert(start, text);
                 box.SelectionStart = start + text.Length;
+                box.SelectionLength = 0;
                 box.Focus();
                 return;
             }
 
             var combo = Target as ComboBox;
-            if (combo != null)
-            {
-                var start = combo.SelectionStart;
-                var length = combo.SelectionLength;
-                var current = combo.Text ?? "";
-                combo.Text = current.Remove(start, length).Insert(start, text);
-                combo.SelectionStart = start + text.Length;
-                combo.Focus();
-            }
+            if (combo == null) return;
+
+            var current = combo.Text ?? "";
+            var from = Clamp(combo.SelectionStart, current.Length);
+            var count = Clamp(combo.SelectionLength, current.Length - from);
+
+            combo.Text = current.Remove(from, count).Insert(from, text);
+            Caret(combo, from + text.Length);
+        }
+
+        private static int Clamp(int value, int max)
+        {
+            if (value < 0) return 0;
+            return value > max ? max : value;
+        }
+
+        /// <summary>
+        /// Поставить курсор в поле со списком и снять выделение.
+        ///
+        /// Нужно вот зачем: присваивание ComboBox.Text выделяет весь текст
+        /// целиком. Следующая нажатая буква попадала «поверх выделения» и
+        /// затирала набранное — в поле навсегда оставалась одна буква.
+        /// В обычном текстовом поле такого нет, поэтому баг вылезал только
+        /// там, где предмет и учитель выбираются из списка.
+        /// </summary>
+        private static void Caret(ComboBox combo, int position)
+        {
+            var text = combo.Text ?? "";
+
+            combo.SelectionStart = Clamp(position, text.Length);
+            combo.SelectionLength = 0;
+            combo.Focus();
         }
 
         private void Backspace()
@@ -379,12 +403,21 @@ namespace SchoolSchedule.Controls
             }
 
             var combo = Target as ComboBox;
-            if (combo != null)
+            if (combo == null) return;
+
+            var current = combo.Text ?? "";
+            var from = Clamp(combo.SelectionStart, current.Length);
+            var count = Clamp(combo.SelectionLength, current.Length - from);
+
+            if (count > 0)
             {
-                var text = combo.Text ?? "";
-                if (text.Length > 0) combo.Text = text.Substring(0, text.Length - 1);
-                combo.SelectionStart = combo.Text.Length;
-                combo.Focus();
+                combo.Text = current.Remove(from, count);
+                Caret(combo, from);
+            }
+            else if (from > 0)
+            {
+                combo.Text = current.Remove(from - 1, 1);
+                Caret(combo, from - 1);
             }
         }
 
@@ -393,7 +426,16 @@ namespace SchoolSchedule.Controls
             if (Target != null) Target.Text = text;
 
             var box = Box();
-            if (box != null) { box.SelectionStart = box.Text.Length; box.Focus(); }
+            if (box != null)
+            {
+                box.SelectionStart = box.Text.Length;
+                box.SelectionLength = 0;
+                box.Focus();
+                return;
+            }
+
+            var combo = Target as ComboBox;
+            if (combo != null) Caret(combo, combo.Text.Length);
         }
     }
 }
