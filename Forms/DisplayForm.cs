@@ -388,8 +388,7 @@ namespace SchoolSchedule.Forms
                        : "";
 
             dateLabel.Text = _mode == DisplaySettings.ModeWeek
-                ? "Неделя " + Ru.Date(ScheduleResolver.MondayOf(_date)) + " — " +
-                  Ru.Date(ScheduleResolver.MondayOf(_date).AddDays(_settings.DaysCount - 1))
+                ? WeekTitle()
                 : Ru.LongDate(_date) + suffix;
 
             var variant = _plan != null ? _plan.Variant : _settings.ActiveVariant;
@@ -412,6 +411,21 @@ namespace SchoolSchedule.Forms
                 title += "  ·  " + _plan.Title;
 
             titleLabel.Text = title;
+        }
+
+        /// <summary>«24 — 29 августа 2026»: месяц и год не повторяем, если они общие.</summary>
+        private string WeekTitle()
+        {
+            var from = ScheduleResolver.MondayOf(_date);
+            var to = from.AddDays(_settings.DaysCount - 1);
+
+            if (from.Month == to.Month && from.Year == to.Year)
+                return "Неделя " + from.Day + " — " + to.Day + " " + Ru.MonthGenitive(to.Month) + " " + to.Year;
+
+            if (from.Year == to.Year)
+                return "Неделя " + from.Day + " " + Ru.MonthGenitive(from.Month) + " — " + Ru.Date(to);
+
+            return "Неделя " + Ru.Date(from) + " — " + Ru.Date(to);
         }
 
         private string ClassName(int id)
@@ -455,22 +469,6 @@ namespace SchoolSchedule.Forms
             return (_classes.Count + _settings.ClassesPerPage - 1) / _settings.ClassesPerPage;
         }
 
-        /// <summary>
-        /// Сколько строк показывать. Пустой «восьмой урок» на весь экран никому
-        /// не нужен — лишние строки снизу отбрасываются, а оставшиеся становятся
-        /// выше и читаются издалека.
-        /// </summary>
-        private int LessonRows(Func<int, bool> hasLesson)
-        {
-            int last = 0;
-            for (int no = 1; no <= _settings.LessonsCount; no++)
-            {
-                if (hasLesson(no)) last = no;
-            }
-            if (last < 4) last = Math.Min(4, _settings.LessonsCount);
-            return last;
-        }
-
         private void BuildWeekGrid()
         {
             var days = _settings.DaysCount;
@@ -485,14 +483,11 @@ namespace SchoolSchedule.Forms
                                                          _settings.ActiveVariant, days);
             }
 
-            _rowLessons = LessonRows(delegate (int no)
-            {
-                for (int i = 0; i < days; i++)
-                {
-                    if (LessonAt(_weekPlans[i].Variant, Repo.Key(i + 1, no)) != null) return true;
-                }
-                return false;
-            });
+            // Строк ровно столько, сколько стоит в «Показ → уроков». Раньше
+            // пустые строки снизу отбрасывались, и в день без уроков сетка
+            // сжималась до четырёх строк, хотя в настройках было восемь —
+            // человек у экрана видел не то, что задавал.
+            _rowLessons = _settings.LessonsCount;
 
             grid.Columns.Clear();
             AddColumn("Урок", "");
@@ -523,14 +518,7 @@ namespace SchoolSchedule.Forms
         {
             _pageClasses = PageClasses();
 
-            _rowLessons = LessonRows(delegate (int no)
-            {
-                foreach (var item in _pageClasses)
-                {
-                    if (LessonAt(_plan.Variant, Repo.Key(item.Id, no)) != null) return true;
-                }
-                return false;
-            });
+            _rowLessons = _settings.LessonsCount;
 
             grid.Columns.Clear();
             AddColumn("Урок", "");
