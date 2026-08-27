@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AssemblyName>SchoolSchedule</AssemblyName>
+    <RootNamespace>SchoolSchedule</RootNamespace>
+    <StartupObject>SchoolSchedule.Program</StartupObject>
+    <ApplicationDefaultFont>Segoe UI, 12pt</ApplicationDefaultFont>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <Version>1.0.0</Version>
+    <AssemblyTitle>Школьное расписание</AssemblyTitle>
+    <Product>Школьное расписание</Product>
+
+    <!-- Позволяет собирать Windows-проект на Linux-агенте GitHub Actions.
+         На обычной машине с Visual Studio ни на что не влияет. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="9.7.0" />
+    <!-- Кодировка 1251: в ней Excel сохраняет CSV в русской Windows -->
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- ip.txt кладётся рядом с .exe, чтобы его можно было править блокнотом -->
+  <ItemGroup>
+    <None Update="ip.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

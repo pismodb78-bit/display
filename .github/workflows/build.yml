@@ -1,0 +1,48 @@
+# Сборка .exe на каждый пуш.
+#
+# Зачем: чтобы получить программу на телевизор, не нужна ни Visual Studio,
+# ни .NET на компьютере — готовый архив забирается со вкладки Actions.
+# Заодно сразу видно, если код перестал компилироваться.
+name: Сборка .exe
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Один файл и с собственным .NET внутри: на школьном компьютере
+      # ничего доустанавливать не придётся.
+      - name: Собрать
+        run: >
+          dotnet publish SchoolSchedule.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
+          -o publish
+
+      # ip.txt кладётся сборкой сам (CopyToOutputDirectory), а sql —
+      # руками: файл нужен, когда у пользователя базы нет прав на CREATE.
+      - name: Положить рядом sql и инструкцию
+        shell: cmd
+        run: |
+          if not exist publish\sql mkdir publish\sql
+          copy /y sql\*.* publish\sql\
+          copy /y README.md publish\
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SchoolSchedule-win-x64
+          path: publish/**
+          if-no-files-found: error
