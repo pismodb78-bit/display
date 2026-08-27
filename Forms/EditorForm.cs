@@ -147,7 +147,7 @@ namespace SchoolSchedule.Forms
             editorKeyboard.Height = (int)(ClientSize.Height * 0.42);
 
             // --- звонки ---
-            Ui.StyleGrid(bellsGrid, false);
+            Ui.StyleGrid(bellsGrid, true);
             bellsGrid.ScrollBars = ScrollBars.Vertical;
             bellsSidePanel.Width = Ui.Px(460);
             bellsSidePanel.Padding = new Padding(Ui.Px(16));
@@ -1067,48 +1067,52 @@ namespace SchoolSchedule.Forms
             bellsGrid.ColumnHeadersHeight = Ui.Px(56);
         }
 
-        private void BellsSaveClicked(object sender, EventArgs e)
+        private void BellsCellClick(object sender, DataGridViewCellEventArgs e)
         {
-            // Сначала проверяем все строки и только потом пишем: иначе
-            // опечатка в пятом уроке оставила бы звонки наполовину новыми.
-            var parsed = new List<LessonTime>();
-            foreach (DataGridViewRow row in bellsGrid.Rows)
-            {
-                var no = Convert.ToInt32(row.Cells[0].Value);
-
-                TimeSpan start, end;
-                if (!TryTime(row.Cells[1].Value, out start) || !TryTime(row.Cells[2].Value, out end))
-                {
-                    Say("Урок " + no + ": время пишется как 08:30.", true);
-                    return;
-                }
-
-                if (end <= start)
-                {
-                    Say("Урок " + no + ": конец раньше начала.", true);
-                    return;
-                }
-
-                parsed.Add(new LessonTime { No = no, Start = start, End = end });
-            }
-
-            try
-            {
-                foreach (var time in parsed) Repo.SaveLessonTime(time.No, time.Start, time.End);
-
-                _times = Repo.LessonTimes();
-                Say("Звонки сохранены: " + parsed.Count + ".");
-            }
-            catch (Exception ex)
-            {
-                Say(Db.Explain(ex), true);
-            }
+            if (e.RowIndex < 0) return;
+            EditBell(e.RowIndex);
         }
 
-        private static bool TryTime(object value, out TimeSpan time)
+        private void BellEditClicked(object sender, EventArgs e)
         {
-            var text = Convert.ToString(value ?? "").Trim().Replace('.', ':').Replace(',', ':');
-            return TimeSpan.TryParse(text, CultureInfo.InvariantCulture, out time);
+            var row = bellsGrid.CurrentRow != null ? bellsGrid.CurrentRow.Index : -1;
+            if (row < 0) { Say("Выберите урок в таблице.", true); return; }
+
+            EditBell(row);
+        }
+
+        /// <summary>
+        /// Время правится в отдельном окне кнопками. В самой таблице это
+        /// делать нечем: у экрана на стене нет клавиатуры, а экранную в клетку
+        /// таблицы не подставить — звонки оказывались нередактируемыми.
+        /// </summary>
+        private void EditBell(int rowIndex)
+        {
+            if (rowIndex < 0 || rowIndex >= _times.Count) return;
+
+            var time = _times[rowIndex];
+
+            using (var form = new BellEditForm(time.No, time.Start, time.End))
+            {
+                if (form.ShowDialog(this) != DialogResult.OK) return;
+
+                try
+                {
+                    if (form.Removed) Repo.DeleteLessonTime(time.No);
+                    else Repo.SaveLessonTime(time.No, form.Start, form.End);
+
+                    _times = Repo.LessonTimes();
+                    FillBells();
+
+                    Say(form.Removed
+                        ? "Урок " + time.No + " убран из звонков."
+                        : "Урок " + time.No + ": " + Ru.Time(form.Start) + " – " + Ru.Time(form.End) + ".");
+                }
+                catch (Exception ex)
+                {
+                    Say(Db.Explain(ex), true);
+                }
+            }
         }
 
         private void BellAddClicked(object sender, EventArgs e)

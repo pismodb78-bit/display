@@ -464,8 +464,10 @@ namespace SchoolSchedule.Forms
             this.bellsGrid.Location = new System.Drawing.Point(0, 0);
             this.bellsGrid.Name = "bellsGrid";
             this.bellsGrid.RowHeadersVisible = false;
+            this.bellsGrid.ReadOnly = true;
             this.bellsGrid.Size = new System.Drawing.Size(1032, 746);
             this.bellsGrid.TabIndex = 0;
+            this.bellsGrid.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.BellsCellClick);
             // 
             // bellsSidePanel
             // 
@@ -487,7 +489,7 @@ namespace SchoolSchedule.Forms
             this.bellsHintLabel.Name = "bellsHintLabel";
             this.bellsHintLabel.Size = new System.Drawing.Size(428, 160);
             this.bellsHintLabel.TabIndex = 3;
-            this.bellsHintLabel.Text = "Время пишется как 08:30. По звонкам на экране подсвечивается идущий урок.";
+            this.bellsHintLabel.Text = "Нажмите на строку, чтобы поменять время. По звонкам на экране подсвечивается идущий урок.";
             // 
             // bellDeleteButton
             // 
@@ -516,8 +518,8 @@ namespace SchoolSchedule.Forms
             this.bellsSaveButton.Name = "bellsSaveButton";
             this.bellsSaveButton.Size = new System.Drawing.Size(428, 64);
             this.bellsSaveButton.TabIndex = 0;
-            this.bellsSaveButton.Text = "Сохранить звонки";
-            this.bellsSaveButton.Click += new System.EventHandler(this.BellsSaveClicked);
+            this.bellsSaveButton.Text = "Изменить время…";
+            this.bellsSaveButton.Click += new System.EventHandler(this.BellEditClicked);
             // 
             // tabCalendar
             // 
