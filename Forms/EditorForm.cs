@@ -1597,10 +1597,21 @@ namespace SchoolSchedule.Forms
 
         private void ExitAppClicked(object sender, EventArgs e)
         {
+            // Последствия выхода разные, и пугать зря не нужно. С витрины
+            // выход гасит расписание на этом экране; на учительском
+            // компьютере закрывается только редактор, а телевизор со своей
+            // копией программы работает дальше.
+            var fromDisplay = Owner is DisplayForm;
+
+            var warning = fromDisplay
+                ? "Расписание на этом экране перестанет показываться, пока программу не запустят снова."
+                : "Закроется только это окно редактора. Расписание на телевизоре продолжит работать.";
+
             var answer = MessageBox.Show(this,
-                "Закрыть программу?" + Environment.NewLine + Environment.NewLine +
-                "Экран в коридоре погаснет до следующего запуска.",
-                "Выход", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                "Закрыть программу?" + Environment.NewLine + Environment.NewLine + warning,
+                "Выход", MessageBoxButtons.YesNo,
+                fromDisplay ? MessageBoxIcon.Warning : MessageBoxIcon.Question);
+
             if (answer != DialogResult.Yes) return;
 
             ExitRequested = true;
