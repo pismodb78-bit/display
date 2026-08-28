@@ -124,6 +124,7 @@ namespace SchoolSchedule.Forms
             this.headerPanel = new System.Windows.Forms.Panel();
             this.dbLabel = new System.Windows.Forms.Label();
             this.closeButton = new System.Windows.Forms.Button();
+            this.exitButton = new System.Windows.Forms.Button();
             this.titleLabel = new System.Windows.Forms.Label();
             this.tabs.SuspendLayout();
             this.tabSchedule.SuspendLayout();
@@ -690,20 +691,20 @@ namespace SchoolSchedule.Forms
             this.displayTable.ColumnCount = 2;
             this.displayTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 420F));
             this.displayTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.displayTable.Controls.Add(this.modeLabel, 0, 0);
-            this.displayTable.Controls.Add(this.modeCombo, 1, 0);
-            this.displayTable.Controls.Add(this.displayClassLabel, 0, 1);
-            this.displayTable.Controls.Add(this.displayClassCombo, 1, 1);
-            this.displayTable.Controls.Add(this.dateLabel, 0, 2);
-            this.displayTable.Controls.Add(this.datePanel, 1, 2);
-            this.displayTable.Controls.Add(this.tomorrowLabel, 0, 3);
-            this.displayTable.Controls.Add(this.tomorrowAfterBox, 1, 3);
-            this.displayTable.Controls.Add(this.variantCaptionLabel, 0, 4);
-            this.displayTable.Controls.Add(this.variantPanel, 1, 4);
-            this.displayTable.Controls.Add(this.schoolLabel, 0, 5);
-            this.displayTable.Controls.Add(this.schoolBox, 1, 5);
-            this.displayTable.Controls.Add(this.tickerLabel, 0, 6);
-            this.displayTable.Controls.Add(this.tickerBox, 1, 6);
+            this.displayTable.Controls.Add(this.schoolLabel, 0, 0);
+            this.displayTable.Controls.Add(this.schoolBox, 1, 0);
+            this.displayTable.Controls.Add(this.tickerLabel, 0, 1);
+            this.displayTable.Controls.Add(this.tickerBox, 1, 1);
+            this.displayTable.Controls.Add(this.modeLabel, 0, 2);
+            this.displayTable.Controls.Add(this.modeCombo, 1, 2);
+            this.displayTable.Controls.Add(this.displayClassLabel, 0, 3);
+            this.displayTable.Controls.Add(this.displayClassCombo, 1, 3);
+            this.displayTable.Controls.Add(this.dateLabel, 0, 4);
+            this.displayTable.Controls.Add(this.datePanel, 1, 4);
+            this.displayTable.Controls.Add(this.tomorrowLabel, 0, 5);
+            this.displayTable.Controls.Add(this.tomorrowAfterBox, 1, 5);
+            this.displayTable.Controls.Add(this.variantCaptionLabel, 0, 6);
+            this.displayTable.Controls.Add(this.variantPanel, 1, 6);
             this.displayTable.Controls.Add(this.numbersLabel, 0, 7);
             this.displayTable.Controls.Add(this.numbersPanel, 1, 7);
             this.displayTable.Controls.Add(this.rotateLabel, 0, 8);
@@ -854,7 +855,7 @@ namespace SchoolSchedule.Forms
             this.schoolLabel.Name = "schoolLabel";
             this.schoolLabel.Size = new System.Drawing.Size(414, 60);
             this.schoolLabel.TabIndex = 10;
-            this.schoolLabel.Text = "Заголовок на экране";
+            this.schoolLabel.Text = "Название школы";
             this.schoolLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // schoolBox
@@ -871,7 +872,7 @@ namespace SchoolSchedule.Forms
             this.tickerLabel.Name = "tickerLabel";
             this.tickerLabel.Size = new System.Drawing.Size(414, 60);
             this.tickerLabel.TabIndex = 12;
-            this.tickerLabel.Text = "Объявление внизу экрана";
+            this.tickerLabel.Text = "Объявление бегущей строкой";
             this.tickerLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // tickerBox
@@ -1225,6 +1226,7 @@ namespace SchoolSchedule.Forms
             // headerPanel
             // 
             this.headerPanel.Controls.Add(this.dbLabel);
+            this.headerPanel.Controls.Add(this.exitButton);
             this.headerPanel.Controls.Add(this.closeButton);
             this.headerPanel.Controls.Add(this.titleLabel);
             this.headerPanel.Dock = System.Windows.Forms.DockStyle.Top;
@@ -1252,6 +1254,16 @@ namespace SchoolSchedule.Forms
             this.closeButton.TabIndex = 1;
             this.closeButton.Text = "Готово";
             this.closeButton.Click += new System.EventHandler(this.CloseClicked);
+            // 
+            // exitButton
+            // 
+            this.exitButton.Dock = System.Windows.Forms.DockStyle.Right;
+            this.exitButton.Location = new System.Drawing.Point(898, 10);
+            this.exitButton.Name = "exitButton";
+            this.exitButton.Size = new System.Drawing.Size(290, 70);
+            this.exitButton.TabIndex = 3;
+            this.exitButton.Text = "Выйти из программы";
+            this.exitButton.Click += new System.EventHandler(this.ExitAppClicked);
             // 
             // titleLabel
             // 
@@ -1421,6 +1433,7 @@ namespace SchoolSchedule.Forms
         private System.Windows.Forms.Panel headerPanel;
         private System.Windows.Forms.Label dbLabel;
         private System.Windows.Forms.Button closeButton;
+        private System.Windows.Forms.Button exitButton;
         private System.Windows.Forms.Label titleLabel;
     }
 }

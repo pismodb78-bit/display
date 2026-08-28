@@ -25,6 +25,7 @@ namespace SchoolSchedule.Forms
         private Dictionary<int, Lesson> _gridCurrent = new Dictionary<int, Lesson>();
         private Dictionary<int, Lesson> _gridOther = new Dictionary<int, Lesson>();
         private bool _loading;
+        private bool _displayDirty;
 
         /// <summary>Учитель нажал «Выйти из программы».</summary>
         public bool ExitRequested { get; private set; }
@@ -43,6 +44,7 @@ namespace SchoolSchedule.Forms
             // Экранная клавиатура одна на всё окно: всплывает под тем полем,
             // в которое ткнули пальцем, и прячется, когда ввод закончен.
             HookTextBoxes(this);
+            HookDisplayChanges();
             editorKeyboard.EnterPressed += delegate { editorKeyboard.Visible = false; };
 
             // Вкладки перечитывают данные при переходе: класс, добавленный на
@@ -80,7 +82,13 @@ namespace SchoolSchedule.Forms
             dbLabel.Font = Ui.F(11f);
             dbLabel.ForeColor = Ui.Muted;
             Ui.PrimaryButton(closeButton);
-            closeButton.Width = Ui.Px(300);
+            closeButton.Width = Ui.Px(240);
+
+            // Выход из программы — прямо в шапке. На телевизоре окно закрыть
+            // больше нечем: рамки нет, Alt+F4 заблокирован, и без этой кнопки
+            // остаётся только диспетчер задач.
+            Ui.DangerButton(exitButton);
+            exitButton.Width = Ui.Px(300);
 
             tabs.Font = Ui.F(14f, true);
             tabs.ItemSize = new Size(Ui.Px(230), Ui.Px(56));
@@ -194,7 +202,7 @@ namespace SchoolSchedule.Forms
             // --- показ ---
             displayTable.RowStyles.Clear();
             for (int i = 0; i < displayTable.RowCount; i++)
-                displayTable.RowStyles.Add(new RowStyle(SizeType.Absolute, Ui.Px(i == 4 ? 86 : 68)));
+                displayTable.RowStyles.Add(new RowStyle(SizeType.Absolute, Ui.Px(i == 6 ? 86 : 68)));
 
             displayTable.ColumnStyles[0].Width = Ui.Px(420);
             displayTable.Padding = new Padding(Ui.Px(24), Ui.Px(16), Ui.Px(24), Ui.Px(16));
@@ -316,13 +324,20 @@ namespace SchoolSchedule.Forms
                             selected ? Ui.OnAccent : Ui.Muted, e.Bounds);
         }
 
-        /// <summary>Растянуть заголовки на всю ширину, чтобы не оставалось системной полосы.</summary>
+        /// <summary>
+        /// Разложить заголовки вкладок по ширине окна.
+        ///
+        /// Запас в двадцать точек — не придирка: без него шесть вкладок ровно
+        /// по ширине не помещались, TabControl включал стрелки прокрутки, и
+        /// «Показ» с «Доступом» уезжали за край. Именно там лежат название
+        /// школы и выход из программы, и найти их было нельзя.
+        /// </summary>
         private void LayoutTabs()
         {
             if (tabs.TabPages.Count == 0 || tabs.ClientSize.Width <= 0) return;
 
-            var width = tabs.ClientSize.Width / tabs.TabPages.Count;
-            if (width < Ui.Px(120)) width = Ui.Px(120);
+            var width = (tabs.ClientSize.Width - Ui.Px(20)) / tabs.TabPages.Count;
+            if (width < Ui.Px(110)) width = Ui.Px(110);
 
             tabs.ItemSize = new Size(width, Ui.Px(56));
         }
@@ -439,6 +454,32 @@ namespace SchoolSchedule.Forms
                 if (active != null) editorKeyboard.Target = active;
                 else editorKeyboard.Visible = false;
             });
+        }
+
+        /// <summary>
+        /// Следим за правками на вкладке «Показ», чтобы набранное название
+        /// школы не пропало, если человек закроет окно, не нажав «Применить».
+        /// </summary>
+        private void HookDisplayChanges()
+        {
+            foreach (var box in new[] { schoolBox, tickerBox, tomorrowAfterBox })
+                box.TextChanged += DisplayChanged;
+
+            foreach (var combo in new[] { modeCombo, displayClassCombo, dateModeCombo, themeCombo })
+                combo.SelectedIndexChanged += DisplayChanged;
+
+            foreach (var updown in new[] { lessonsUpDown, daysUpDown, perPageUpDown, rotateUpDown, idleUpDown })
+                updown.ValueChanged += DisplayChanged;
+
+            foreach (var check in new[] { autoRotateCheck, replacementsCheck })
+                check.CheckedChanged += DisplayChanged;
+
+            datePicker.ValueChanged += DisplayChanged;
+        }
+
+        private void DisplayChanged(object sender, EventArgs e)
+        {
+            if (!_loading) _displayDirty = true;
         }
 
         private void TabChanged(object sender, EventArgs e)
@@ -1337,6 +1378,7 @@ namespace SchoolSchedule.Forms
                 rotateUpDown.Value = _settings.RotateSeconds;
                 idleUpDown.Value = _settings.IdleSeconds;
                 replacementsCheck.Checked = _settings.ShowReplacements;
+                _displayDirty = false;
             }
             finally
             {
@@ -1372,18 +1414,23 @@ namespace SchoolSchedule.Forms
 
         private void ApplyDisplayClicked(object sender, EventArgs e)
         {
+            ApplyDisplay();
+        }
+
+        private bool ApplyDisplay()
+        {
             var time = (tomorrowAfterBox.Text ?? "").Trim();
             if (time.Length > 0 && !DisplaySettings.ParseTime(time).HasValue)
             {
                 Say("Время пишется как 14:30 — или оставьте поле пустым.", true);
-                return;
+                return false;
             }
 
             var selectedClass = displayClassCombo.SelectedItem as SchoolClass;
             if (modeCombo.SelectedIndex == 1 && selectedClass == null)
             {
                 Say("Для показа недели нужно выбрать класс.", true);
-                return;
+                return false;
             }
 
             var dateMode = dateModeCombo.SelectedIndex == 1 ? "tomorrow"
@@ -1415,14 +1462,42 @@ namespace SchoolSchedule.Forms
             {
                 Repo.SetMany(values);
                 _settings = DisplaySettings.From(Repo.Settings());
+                _displayDirty = false;
                 RepaintTheme();
                 LoadSchedule();
                 Say("Готово. Экран переключится сам в течение " + AppConfig.RefreshSeconds + " с.");
+                return true;
             }
             catch (Exception ex)
             {
                 Say(Db.Explain(ex), true);
+                return false;
             }
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (_displayDirty)
+            {
+                var answer = MessageBox.Show(this,
+                    "Настройки показа изменены, но не применены." + Environment.NewLine + Environment.NewLine +
+                    "Применить их сейчас?",
+                    "Показ", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+
+                if (answer == DialogResult.Cancel || (answer == DialogResult.Yes && !ApplyDisplay()))
+                {
+                    // Остаёмся в окне — и снимаем намерение выйти, иначе
+                    // следующее «Готово» неожиданно закрыло бы программу.
+                    ExitRequested = false;
+                    tabs.SelectedTab = tabDisplay;
+                    e.Cancel = true;
+                    return;
+                }
+
+                _displayDirty = false;
+            }
+
+            base.OnFormClosing(e);
         }
 
         /// <summary>
@@ -1462,6 +1537,8 @@ namespace SchoolSchedule.Forms
                 "База: " + Db.SafeDescription() + Environment.NewLine + Environment.NewLine +
                 "Если пароль забыт: откройте в phpMyAdmin таблицу settings и удалите строку admin_password — " +
                 "снова заработает пароль из ip.txt." + Environment.NewLine + Environment.NewLine +
+                "Название школы и бегущая строка меняются на вкладке «Показ» — там же, где всё, " +
+                "что видно на экране в коридоре." + Environment.NewLine + Environment.NewLine +
                 "Расписание можно править и с другого компьютера: поставьте там эту же программу, " +
                 "укажите в ip.txt тот же сервер — и добавьте строку mode = editor, чтобы она открывалась " +
                 "сразу в режиме учителя, без полноэкранного показа.";
